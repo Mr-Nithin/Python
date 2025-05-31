@@ -63,7 +63,7 @@ class GoldMember(Customer):
         self._reward += reward
 
     def display_info(self):
-        print(f"ID : {self.getID()}\nName : {self.getName()} Discount Rate : {GoldMember._discount_rate} \nReward Rate   : {self._reward_rate} \nReward        : {self._reward}")
+        print(f"ID : {self.getID()}\nName : {self.getName()}\nDiscount Rate : {GoldMember._discount_rate}% \nReward Rate   : {self._reward_rate} \nReward        : {self._reward}")
 
 #Book
 class Book:
@@ -116,16 +116,23 @@ class Rental:
         self._days = days
 
     def compute_cost(self):
-        original_cost = self._book.get_price(self._days)
-        # Check for discount and reward
+        days = self._days
+        book = self._book
+        customer = self._customer
+
+        original_cost = book.get_price(days)
         discount = 0
         reward = None
-        if hasattr(self._customer, 'get_discount'):
-            discount = self._customer.get_discount(original_cost)
-        total_cost = original_cost - discount
-        if hasattr(self._customer, 'get_reward'):
-            reward = self._customer.get_reward(total_cost)
-            return (original_cost, discount, total_cost, reward)
-        else:
-            return (original_cost, discount, total_cost)
 
+        if hasattr(customer, 'get_discount'):
+            discount = customer.get_discount(original_cost)
+
+        total_cost = original_cost - discount
+
+        if hasattr(customer, 'get_reward'):
+            reward = customer.get_reward(total_cost)
+            return original_cost, discount, total_cost, reward
+
+        return original_cost, discount, total_cost
+
+#Records
