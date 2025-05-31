@@ -58,4 +58,25 @@ class GoldMember:
     def display_info(self):
         print(f"Discount Rate : {GoldMember._discount_rate} \nReward Rate   : {self._reward_rate} \nReward        : {self._reward}")
 
+#Book
+class Book:
 
+    def __init__(self, ID, name, category):
+        self._ID = ID
+        self._name = name
+        self._category = category
+
+    def get_price(self, days):
+        return self._category.get_price(days)
+
+    def display_info(self):
+        print(f"ID : {self._ID} \nName : {self._name} \nCategory : {self._category}")
+
+    def get_ID(self):
+        return self._ID
+
+    def get_name(self):
+        return  self._name
+
+    def get_category(self):
+        return  self._category
