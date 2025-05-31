@@ -80,3 +80,22 @@ class Book:
 
     def get_category(self):
         return  self._category
+
+#Book Category
+class BookCategory:
+
+    def __int__(self, ID, name, price_1, price_2):
+        self._ID = ID
+        self._name = name
+        self._price_1 = price_1
+        self._price_2 = price_2
+        self._books = []
+
+    def get_price(self, days):
+        return days * (self._price_2 if days >= 10 else self._price_1)
+
+    def add_book(self, book):
+        self._books.append(book)
+
+    def display_info(self):
+        print(f"CategoryID : {self._ID} \nName : {self._name}\n Price1 : {self._price_1}\n Price2 : {self._price_2}\n Books: {[book.get_name() for book in self._books]}")
