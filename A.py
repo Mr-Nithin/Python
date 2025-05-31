@@ -15,27 +15,34 @@ class Customer:
     def display_info(self):
         print(f"ID   : { self._ID} \nName : {self._name}")
 
+
 #Member
-class Member:
-    _discount_rate = 10 #Discout rate by default for all members
+class Member(Customer):
+    _discount_rate = 10
+
+    def __init__(self, ID, name):
+        super().__init__(ID, name)
 
     @staticmethod
-    def get_discount(self, cost):
+    def get_discount(cost):
         return (cost * Member._discount_rate) / 100
 
     @staticmethod
-    def set_discount_rate(self, new_discount_rate):
+    def set_discount_rate(new_discount_rate):
         Member._discount_rate = new_discount_rate
 
-    @staticmethod
+
     def display_info(self):
-        print(f"Member Discount Rate : {Member._discount_rate}%")
+        print(f"ID : {self.getID()} \n Name: {self.getName()}\n Member Discount Rate : {Member._discount_rate}%")
+
+
 
 #Gold Member
-class GoldMember:
+class GoldMember(Customer):
     _discount_rate = 12
 
-    def __init__(self, reward_rate = 100):
+    def __init__(self, ID, name, reward_rate=100):
+        super().__init__(ID, name)
         self._reward_rate = reward_rate
         self._reward = 0
 
@@ -56,7 +63,7 @@ class GoldMember:
         self._reward += reward
 
     def display_info(self):
-        print(f"Discount Rate : {GoldMember._discount_rate} \nReward Rate   : {self._reward_rate} \nReward        : {self._reward}")
+        print(f"ID : {self.getID()}\nName : {self.getName()} Discount Rate : {GoldMember._discount_rate} \nReward Rate   : {self._reward_rate} \nReward        : {self._reward}")
 
 #Book
 class Book:
@@ -84,7 +91,7 @@ class Book:
 #Book Category
 class BookCategory:
 
-    def __int__(self, ID, name, price_1, price_2):
+    def __init__(self, ID, name, price_1, price_2):
         self._ID = ID
         self._name = name
         self._price_1 = price_1
@@ -99,3 +106,26 @@ class BookCategory:
 
     def display_info(self):
         print(f"CategoryID : {self._ID} \nName : {self._name}\n Price1 : {self._price_1}\n Price2 : {self._price_2}\n Books: {[book.get_name() for book in self._books]}")
+
+
+#Rental
+class Rental:
+    def __init__(self, customer, book, days):
+        self._customer = customer
+        self._book = book
+        self._days = days
+
+    def compute_cost(self):
+        original_cost = self._book.get_price(self._days)
+        # Check for discount and reward
+        discount = 0
+        reward = None
+        if hasattr(self._customer, 'get_discount'):
+            discount = self._customer.get_discount(original_cost)
+        total_cost = original_cost - discount
+        if hasattr(self._customer, 'get_reward'):
+            reward = self._customer.get_reward(total_cost)
+            return (original_cost, discount, total_cost, reward)
+        else:
+            return (original_cost, discount, total_cost)
+
