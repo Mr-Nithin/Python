@@ -1,3 +1,5 @@
+
+import  os
 #Customer
 class Customer:
     def __init__(self, ID, name):
@@ -139,7 +141,7 @@ class Rental:
 #Records
 class Records:
     def __init__(self):
-        self._customers = []
+        self.customers = []
         self._book_categories = []
         self._books = []
 
@@ -168,7 +170,7 @@ class Records:
                         customer._reward = int(reward_points)
                 else:
                     continue
-                self._customers.append(customer)
+                self.customers.append(customer)
 
     def read_books_and_book_categories(self, book_file, category_file):
         book_dict = {}
@@ -195,14 +197,14 @@ class Records:
                         book_category.add_book(book)
 
     def find_customer(self, value):
-        for customer in self._customers:
+        for customer in self.customers:
             if customer.getID() == value or customer.getName() == value:
                 return customer
         return None
 
     def find_book_category(self, value):
         for book_category in self._book_categories:
-            if book_category._ID == value or book_category._name == value:
+            if book_category.get_ID  == value or book_category.get_name == value:
                 return book_category
         return None
 
@@ -213,7 +215,7 @@ class Records:
         return None
 
     def list_customers(self):
-        for customer in self._customers:
+        for customer in self.customers:
             customer_id = customer.getID()
             customer_name = customer.getName()
             discount_rate = getattr(customer, '_discount_rate', 'na')
@@ -229,4 +231,158 @@ class Records:
         for book_category in self._book_categories:
             print(
                 f"ID: {book_category.get_ID()}, Name: {book_category.get_name()}, Price 1: {book_category.get_price_1()}, Price 2: {book_category.get_price_2()}, Books: {[book.get_name() for book in book_category.get_books()]}")
+
+
+#Operations
+
+class Operations:
+    def __init__(self):
+        self._records = Records()
+        self._customer_file = 'customers.txt'
+        self._book_file = 'books.txt'
+        self._category_file = 'book_categories.txt'
+        self._files_exist = self._check_files_exist()
+        if self._files_exist:
+            self._records.read_customers(self._customer_file)
+            self._records.read_books_and_book_categories(self._book_file, self._category_file)
+        else:
+            return
+
+    def _check_files_exist(self):
+        missing = []
+        for file_name in [self._customer_file, self._book_file, self._category_file]:
+            if not os.path.exists(file_name):
+                print(f"Error: Required file '{file_name}' is missing.")
+                missing.append(file_name)
+        if missing:
+            print("Exiting program due to missing files.")
+            return False
+        return True
+
+    def run(self):
+        if not self._files_exist:
+            return
+        while True:
+            print("Welcome to the RMIT Book Rental Service!\n")
+            print("#################################################################")
+            print("You can choose from the following options:")
+            print("1: Rent a book")
+            print("2: Display existing customers")
+            print("3: Display existing book categories")
+            print("4: Display existing books")
+            print("0: Exit the program")
+            print("#################################################################")
+            option = input("Choose one Option :  ")
+            if option.isdigit():
+                option = int(option)
+                if 0 <= option <= 4:
+                    if option == 1:
+                        self._rent_books_session()
+                    elif option == 2:
+                        self._records.list_customers()
+                    elif option == 3:
+                        self._records.list_book_categories()
+                    elif option == 4:
+                        self._records.list_books()
+                    elif option == 0:
+                        print("Exiting program. Goodbye!")
+                        return
+                else:
+                    print("Please enter a valid option between 0 to 4")
+            else:
+                print("Enter a valid option a NUMBER between 0 to 4")
+
+    def _rent_books_session(self):
+        # Requesting user for Username
+        while True:
+            customer_name = input("Enter the name of the customer [e.g. Huong]: \n").strip()
+            if customer_name.replace(" ", "").isalpha():
+                break
+            print("It's an invalid name. Please enter a valid single name with alphabets only.")
+
+        customer = self._records.find_customer(customer_name)
+        new_customer = False
+        if not customer:
+            print("Customer not found. Registering new customer.")
+            new_id = input("Enter new customer ID: ").strip()
+            while True:
+                member_type = input("Do you want to be a member? (y/n): ").strip().lower()
+                if member_type == 'y':
+                    customer = Member(new_id, customer_name)
+                    print(f"Registered as Member: {customer_name}")
+                    break
+                elif member_type == 'n':
+                    customer = Customer(new_id, customer_name)
+                    print(f"Registered as Customer: {customer_name}")
+                    break
+                else:
+                    print("Please enter 'y' for member or 'n' for just a customer.")
+            self._records.customers.append(customer)
+            new_customer = True
+
+        rented_books = []
+        total_cost = 0
+        total_discount = 0
+        total_reward = 0
+
+        while True:
+            # Requesting user for Book
+            while True:
+                book_name = input("Enter the book [enter a valid book only, e.g. Harry Potter 1]: \n").strip()
+                book = self._records.find_book(book_name)
+                if book:
+                    break
+                else:
+                    print("Please enter a valid book name.")
+
+            # Requesting user for number of days
+            while True:
+                number_of_days_borrowing = input("Enter the number of borrowing days [positive integer only]: \n")
+                if number_of_days_borrowing.isdigit():
+                    number_of_days_borrowing = int(number_of_days_borrowing)
+                    if number_of_days_borrowing > 0:
+                        break
+                    else:
+                        print("Please enter a number greater than 0.")
+                else:
+                    print("Invalid input. Enter a whole number only.")
+
+            cost_per_day = book.get_category().get_price_1() if number_of_days_borrowing < 10 else book.get_category().get_price_2()
+            subtotal = cost_per_day * number_of_days_borrowing
+            discount = 0
+            reward = 0
+            if hasattr(customer, 'get_discount'):
+                discount = customer.get_discount(subtotal)
+            if isinstance(customer, GoldMember):
+                reward = customer.get_reward(subtotal - discount)
+                total_reward += reward
+            total_cost += subtotal
+            total_discount += discount
+            rented_books.append((book, number_of_days_borrowing, cost_per_day, reward))
+
+            # Ask if user wants to rent another book
+            while True:
+                another = input("Would you like to rent another book? (y/n): ").strip().lower()
+                if another in ['y', 'n']:
+                    break
+                else:
+                    print("Information is invalid input. Please enter only 'y' for yes or 'n' for no.")
+            if another == 'n':
+                break
+
+        # Print receipt
+        print("------------------------------------------------------------------------------------------")
+        print(f"Receipt for {customer.getName()}")
+        print("------------------------------------------------------------------------------------------")
+        print("Books rented:")
+        for book, days, rate, _ in rented_books:
+            print(f"  - {book.get_name()} for {days} days ({rate:.2f} AUD/day)")
+        print("------------------------------------------------------------------------------------------")
+        print(f"Original cost: {total_cost:.2f} (AUD)")
+        print(f"Discount: {total_discount:.2f} (AUD)")
+        print(f"Total cost: {total_cost - total_discount:.2f} (AUD)")
+        if isinstance(customer, GoldMember):
+            print(f"Reward: {total_reward}")
+        print("Thanks for visiting the library! Have a nice day.")
+
 
